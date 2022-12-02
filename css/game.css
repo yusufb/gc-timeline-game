@@ -1,3 +1,12 @@
 #bottom {
     overflow-x: auto;
 }
+
+.px-large {
+    padding-left: 15rem !important;
+    padding-right: 15rem !important;
+}
+
+.has-background-info-lighter {
+    background-color: #eff5fb3d !important;
+}

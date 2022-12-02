@@ -1,18 +1,28 @@
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
-const INITIAL_LIVES = 3;
+const INITIAL_LIVES = 3333;
 let currentData = null;
 
-const topCardColor = 'has-background-warning-light';
-const topCardSize = 'is-5';
+const topCardSize = 'is-3';
 const bottomCardSize = 'is-3';
+const topCardColor = 'has-background-white-ter';
 const bottomCardColor = 'has-background-white-ter';
 const wrongBottomCardColor = 'has-background-danger-light';
 
 const dragulaObj = dragula([document.getElementById('top-card'), document.getElementById('bottom-cards')], {
     moves: function (el, source, handle, sibling) {
-        return source.id === 'top-card';
+        return (source.id === 'top-card' && hasLives());
     },
+
+    accepts: function (el, target, source, sibling) {
+        return target.id === 'bottom-cards';
+    },
+});
+
+marked.setOptions({
+    baseUrl: "https://developer.gocardless.com/api-reference",
+    silent: true,
+    gfm: true
 });
 
 dragulaObj.on('drop', function (el, target, source, sibling) {
@@ -22,6 +32,17 @@ dragulaObj.on('drop', function (el, target, source, sibling) {
 document.addEventListener("DOMContentLoaded", function (event) {
     restartGame();
 });
+
+document.onkeydown = function (evt) {
+    evt = evt || window.event;
+    let isEscape = false;
+    if ("key" in evt) {
+        isEscape = (evt.key === "Escape" || evt.key === "Esc");
+    }
+    if (isEscape) {
+        dragulaObj.cancel(true);
+    }
+};
 
 function restartGame() {
     document.getElementById('game-update').classList.add('is-hidden');
@@ -55,11 +76,11 @@ function checkDrop(el, target, source, sibling) {
 
     let guessCorrect = true;
 
-    if(prevDate && elDate < prevDate) {
+    if (prevDate && elDate < prevDate) {
         guessCorrect = false;
     }
 
-    if(nextDate && elDate > nextDate) {
+    if (nextDate && elDate > nextDate) {
         guessCorrect = false;
     }
 
@@ -75,7 +96,7 @@ function checkDrop(el, target, source, sibling) {
     }
 
     const bottomCards = document.querySelectorAll('#bottom-cards>.column').length;
-    if(bottomCards < 5) {
+    if (bottomCards < 5) {
         document.querySelectorAll('#bottom-cards>.column').forEach(c => {
             c.classList.add(bottomCardSize);
         });
@@ -85,7 +106,9 @@ function checkDrop(el, target, source, sibling) {
         });
     }
 
-    newTurn();
+    if (hasLives()) {
+        newTurn();
+    }
 }
 
 function cardToBottom(event) {
@@ -97,8 +120,7 @@ function cardToBottom(event) {
 }
 
 function cardToTop(event) {
-    const c = createCard(event[1], event[0], false);
-    document.querySelector('#top-card').innerHTML = c;
+    document.querySelector('#top-card').innerHTML = createCard(event[1], event[0], false);
     document.querySelector('#top-card').querySelector('.column').classList.add(topCardSize);
 }
 
@@ -111,21 +133,17 @@ function getShuffledData() {
 function moveToCorrectPlace(elDate, el, target) {
 
     let inserted = false;
-    console.log('..........');
     target.querySelectorAll('.column').forEach(c => {
 
-        console.log('checking');
-        console.log(c.querySelector('.event-date')?.innerText);
-
         const curDate = parseDateStr(c.querySelector('.event-date')?.innerText);
-        if(!inserted && curDate && curDate > elDate) {
+        if (!inserted && curDate && curDate > elDate) {
             inserted = true;
             target.insertBefore(el, c);
         }
 
     });
 
-    if(!inserted) {
+    if (!inserted) {
         target.appendChild(el);
     }
 }
@@ -141,7 +159,7 @@ function createCard(content, date, displayDate) {
                     <div class="card-content pt-1">
                         <div class="content">
                             <span class="event-date">${dateContent}</span>
-                            ${marked.parse(content)}
+                            ${marked.parseInline(content)}
                         </div>
                     </div>
                 </div>
@@ -165,10 +183,14 @@ function decLive() {
 
     lives.innerText = curr.toString();
 
-    if(curr < 1) {
+    if (curr < 1) {
         endGame();
     }
 
+}
+
+function hasLives() {
+    return parseInt(document.getElementById('curr-lives').innerText) > 0;
 }
 
 /**
@@ -176,7 +198,7 @@ function decLive() {
  */
 function parseDateStr(dateStr) {
 
-    if(!dateStr) return null;
+    if (!dateStr) return null;
 
     const parts = dateStr.split(' ');
     let d = parts[2] + '-';
