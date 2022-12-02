@@ -1,6 +1,6 @@
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
-const INITIAL_LIVES = 3333;
+const INITIAL_LIVES = 3;
 let currentData = null;
 
 const topCardSize = 'is-3';
